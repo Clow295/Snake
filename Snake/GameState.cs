@@ -1,5 +1,7 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
 
 
 namespace Snake
@@ -11,6 +13,15 @@ namespace Snake
         public GridValue[,] Grid { get; }
         public Direction Dir { get; private set; }
         public int Score { get; private set; }
+        private int gameTimeInSeconds;
+        private DispatcherTimer timer;
+        public int Lives { get; private set; }
+        private bool isImmune;
+        private readonly int immuneTime = 200;
+        private int immuneTimer;
+        private int delay = 45;
+
+        //public int HighestScore { get; set; }
 
         public GameMode Mode { get; set; }
 
@@ -18,15 +29,34 @@ namespace Snake
         private readonly LinkedList<Position> snakePositions = new();
         private readonly Random random = new Random();
 
-        public GameState(int rows, int cols)
+        public GameState(int rows, int cols, int lives, int gameTimeInSeconds)
         {
             Rows = rows;
             Cols = cols;
             Grid = new GridValue[Rows, Cols];
             Dir = Direction.right;
+            Lives = lives;
+            this.gameTimeInSeconds = gameTimeInSeconds;
+
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += Timer_Tick;
+            timer.Start();
 
             AddSnake();
             AddFood();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            // Giảm thời gian đi 1 giây
+            gameTimeInSeconds--;
+
+            // Kiểm tra nếu thời gian đã hết, kết thúc trò chơi
+            if (gameTimeInSeconds <= 0)
+            {
+                Mode = GameMode.Over;
+            }
         }
 
         private void AddSnake()
@@ -140,6 +170,15 @@ namespace Snake
 
         public void Move()
         {
+            if (isImmune)
+            {
+                immuneTimer -= delay;
+                if (immuneTimer <= 0)
+                {
+                    isImmune = false;
+                }
+            }
+
             if (dirChanges.Count > 0)
             {
                 Dir = dirChanges.First.Value;
@@ -151,7 +190,16 @@ namespace Snake
 
             if(hit == GridValue.Outside || hit == GridValue.Snake)
             {
-                Mode = GameMode.Over;
+                if (!isImmune)
+                {
+                    Lives--;
+                    isImmune = true;
+                    immuneTimer = immuneTime;
+                    if (Lives <= 0)
+                    {
+                        Mode = GameMode.Over;
+                    }
+                }
             }
             else if(hit == GridValue.Empty)
             {

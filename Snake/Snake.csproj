@@ -17,6 +17,7 @@
     <None Remove="Assets\Empty.png" />
     <None Remove="Assets\Food.png" />
     <None Remove="Assets\Head.png" />
+    <None Remove="Assets\heart.png" />
     <None Remove="Assets\icon.ico" />
   </ItemGroup>
 
@@ -29,6 +30,9 @@
     <Resource Include="Assets\Empty.png" />
     <Resource Include="Assets\Food.png" />
     <Resource Include="Assets\Head.png" />
+    <Content Include="Assets\heart.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Assets\icon.ico" />
   </ItemGroup>
 

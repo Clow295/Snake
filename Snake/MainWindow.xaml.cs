@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Windows.Threading;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Snake
 {
@@ -20,8 +13,11 @@ namespace Snake
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly int msGameLoop = 250;
         private readonly int rows = 15, cols = 15;
+        private readonly int maxDelay = 300;
+        private readonly int minDelay = 50;
+        private readonly int delayDecrease = 10;
+        private int gameTimeInSeconds = 63;
         private readonly Image[,] gridImages;
         private GameState gameState;
 
@@ -44,17 +40,19 @@ namespace Snake
         {
             InitializeComponent();
             gridImages = SetupGrid();
-            gameState = new GameState(rows, cols);
+            gameState = new GameState(rows, cols, 3, gameTimeInSeconds);
+            StartTimer();
         }
 
         private async Task RunGame()
         {
+            ResetGameTimer();
             Draw();
             await ShowCountDown();
             Overlay.Visibility = Visibility.Hidden;
             await GameLoop();
             await ShowGameOver();
-            gameState = new GameState(rows, cols);
+            gameState = new GameState(rows, cols, 3, gameTimeInSeconds);
         }
 
         private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -63,7 +61,7 @@ namespace Snake
             {
                 e.Handled = true;
             }
-            if(gameState.Mode == GameMode.NotStarted)
+            if (gameState.Mode == GameMode.NotStarted)
             {
                 gameState.Mode = GameMode.Started;
                 await RunGame();
@@ -73,23 +71,23 @@ namespace Snake
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if(gameState.Mode == GameMode.NotStarted)
+            if (gameState.Mode == GameMode.NotStarted)
             {
                 return;
             }
 
-            if(gameState.Mode == GameMode.Over)
+            if (gameState.Mode == GameMode.Over)
             {
                 return;
             }
 
-            if(gameState.Mode == GameMode.Started && e.Key == Key.Space)
+            if (gameState.Mode == GameMode.Started && e.Key == Key.Space)
             {
                 gameState.Mode = GameMode.Paused;
                 return;
             }
 
-            if(gameState.Mode == GameMode.Paused && e.Key == Key.Space)
+            if (gameState.Mode == GameMode.Paused && e.Key == Key.Space)
             {
                 gameState.Mode = GameMode.Resuming;
                 return;
@@ -120,24 +118,25 @@ namespace Snake
         {
             while (gameState.Mode != GameMode.NotStarted && gameState.Mode != GameMode.Over)
             {
-                await Task.Delay(msGameLoop);
-                if(gameState.Mode == GameMode.Started)
+                int delay = Math.Max(minDelay, maxDelay - (gameState.Score * delayDecrease));
+                await Task.Delay(delay);
+                if (gameState.Mode == GameMode.Started)
                 {
                     gameState.Move();
                     Draw();
                 }
-                if(gameState.Mode == GameMode.Paused)
+                if (gameState.Mode == GameMode.Paused)
                 {
                     Overlay.Visibility = Visibility.Visible;
                     OverlayText.Text = "Pause";
                 }
-                else if(gameState.Mode == GameMode.Resuming)
+                else if (gameState.Mode == GameMode.Resuming)
                 {
-                    Overlay.Visibility= Visibility.Visible;
-                    for (int i = 5; i >= 1; i--)
+                    Overlay.Visibility = Visibility.Visible;
+                    for (int i = 3; i >= 1; i--)
                     {
                         OverlayText.Text = $"Resuming in {i}";
-                        await Task.Delay(1000);
+                        await Task.Delay(500);
                     }
                     Overlay.Visibility = Visibility.Hidden;
                     gameState.Mode = GameMode.Started;
@@ -151,9 +150,9 @@ namespace Snake
             GameGrid.Columns = cols;
             GameGrid.Width = GameGrid.Height * (cols / (double)rows);
 
-            for(int r = 0; r < rows; r++)
+            for (int r = 0; r < rows; r++)
             {
-                for(int c = 0; c < cols; c++)
+                for (int c = 0; c < cols; c++)
                 {
                     Image image = new Image
                     {
@@ -168,18 +167,53 @@ namespace Snake
             return images;
         }
 
+        //private void LoadHighestScore()
+        //{
+        //    try
+        //    {
+        //        if (File.Exists("highest_score.txt"))
+        //        {
+        //            string scoreText = File.ReadAllText("highest_score.txt");
+        //            gameState.HighestScore = int.Parse(scoreText);
+        //        }
+        //        else
+        //        {
+        //            gameState.HighestScore = 0;
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine("Error loading highest score: " + e.Message);
+        //    }
+        //}
+
+        //private void SaveHighestScore()
+        //{
+        //    try
+        //    {
+        //        File.WriteAllText("highest_score.txt", gameState.HighestScore.ToString());
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine("Error saving highest score: " + e.Message);
+        //    }
+        //}
+
         private void Draw()
         {
             DrawGrid();
             DrawSnakeHead();
-            ScoreText.Text = $"SCORE {gameState.Score}";
+            //LoadHighestScore();
+            ScoreText.Text = $"Score {gameState.Score}";
+            LivesText.Text = $"{gameState.Lives}";
+            //HighestScore.Text = $"Highest score {gameState.HighestScore}";
         }
 
         private void DrawGrid()
         {
-            for (int r = 0;r < rows; r++)
+            for (int r = 0; r < rows; r++)
             {
-                for( int c = 0; c < cols; c++)
+                for (int c = 0; c < cols; c++)
                 {
                     GridValue gridVal = gameState.Grid[r, c];
                     gridImages[r, c].Source = gridValToImage[gridVal];
@@ -209,22 +243,59 @@ namespace Snake
                 await Task.Delay(100);
             }
         }
+        private void StartTimer()
+        {
+            DispatcherTimer gameTimer = new DispatcherTimer();
+            gameTimer.Interval = TimeSpan.FromSeconds(1);
+            gameTimer.Tick += GameTimer_Tick;
+            gameTimer.Start();
+        }
+
+        // Phương thức xử lý mỗi giây của timer
+        private void GameTimer_Tick(object sender, EventArgs e)
+        {
+            if (gameState.Mode == GameMode.Started)
+            {
+                gameTimeInSeconds--;
+            }
+
+            // Hiển thị thời gian còn lại trên giao diện người dùng
+            TimerTextBlock.Text = $"Time: {gameTimeInSeconds}s";
+
+            // Kiểm tra nếu thời gian đã hết, kết thúc trò chơi
+            if (gameTimeInSeconds <= 0 && gameState.Mode != GameMode.Paused && gameState.Mode != GameMode.Over)
+            {
+                gameState.Mode = GameMode.Over;
+                
+            }
+        }
+        private void ResetGameTimer()
+        {
+            gameTimeInSeconds = 63;
+        }
+
 
         private async Task ShowCountDown()
         {
-            for (int i = 5; i >= 1; i--)
+            for (int i = 3; i >= 1; i--)
             {
                 OverlayText.Text = $"{i}";
-                await Task.Delay(1000);
+                await Task.Delay(500);
             }
         }
 
         private async Task ShowGameOver()
         {
             await DrawDeadSnake();
-            await Task.Delay(1000);
+            await Task.Delay(500);
+            //if (gameState.Score > gameState.HighestScore)
+            //{
+            //    gameState.HighestScore = gameState.Score;
+            //    SaveHighestScore();
+            //}
+            //HighestScore.Text = $"Highest score {gameState.HighestScore}";
             Overlay.Visibility = Visibility.Visible;
-            OverlayText.Text = "Press any key to start";
+            OverlayText.Text = "Oh no!\n...you die\nPress any key to start";
             gameState.Mode = GameMode.NotStarted;
         }
     }

@@ -18,20 +18,29 @@
     <Viewbox>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
+                <RowDefinition Height="28.695"/>
+                <RowDefinition Height="16.915"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock x:Name="ScoreText" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Score 0" FontSize="22" Margin="10"/>
-            <Border x:Name="GridBorder" Grid.Row="1" BorderBrush="{StaticResource GridLineColor}" BorderThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.EdgeMode="Aliased" Margin="20,0,20,20">
-                <UniformGrid x:Name="GameGrid" Width="400" Height="400" Background="{StaticResource GridBackgroundColor}" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality">
-
-                </UniformGrid>
+            <TextBlock x:Name="ScoreText" HorizontalAlignment="Center" VerticalAlignment="Top" Text="Score 0" FontSize="22" Margin="0,10,0,0" Grid.RowSpan="2"/>
+            <Border x:Name="GridBorder" Grid.Row="2" BorderBrush="{StaticResource GridLineColor}" BorderThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Top" RenderOptions.EdgeMode="Aliased">
+                <UniformGrid x:Name="GameGrid" Width="400" Height="400" Background="{StaticResource GridBackgroundColor}" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality"/>
             </Border>
 
-            <Border x:Name="Overlay" Grid.Row="1" Background="{StaticResource OverlayColor}" Width="{Binding Path=ActualWidth, ElementName=GridBorder}" Height="{Binding Path=ActualHeight, ElementName=GridBorder}" Margin="{Binding Path=ActualMargin, ElementName=GridBorder}" RenderOptions.EdgeMode="Aliased">
+            <Border x:Name="Overlay" Grid.Row="2" Background="{StaticResource OverlayColor}" Width="{Binding Path=ActualWidth, ElementName=GridBorder}" Height="{Binding Path=ActualHeight, ElementName=GridBorder}" Margin="20,1,20,19" RenderOptions.EdgeMode="Aliased">
                 <TextBlock x:Name="OverlayText" Text="Press any key to start" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
             </Border>
+
+            <Grid HorizontalAlignment="Right" Margin="0,15,-157,373" Grid.RowSpan="3" Width="177">
+                <Image x:Name="SnakeLivesImage" Source="assets/heart.png" Width="30" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="123,7,0,0"/>
+                <TextBlock x:Name="LivesText" Text="3" FontSize="22" Margin="158,9,6,40"/>
+                <TextBlock x:Name="TimerTextBlock" Text="Time: 63s" FontSize="22" Margin="53,39,0,10"/>
+            </Grid>
+            <!--<Grid HorizontalAlignment="Left" Height="266" Margin="578,10,0,0" Grid.RowSpan="2" VerticalAlignment="Top" Width="164">
+                <TextBlock x:Name="HighestScore" HorizontalAlignment="Center" VerticalAlignment="Top" Text="Highest score 0" FontSize="18" Margin="0,10,0,0"/>
+            </Grid>-->
+
         </Grid>
     </Viewbox>
 </Window>
