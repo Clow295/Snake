@@ -148,7 +148,11 @@ namespace Snake
             Image[,] images = new Image[rows, cols];
             GameGrid.Rows = rows;
             GameGrid.Columns = cols;
-            GameGrid.Width = GameGrid.Height * (cols / (double)rows);
+            if (rows > cols)
+            {
+                GameGrid.Width = GameGrid.Height * (cols / (double)rows);
+            }
+            else GameGrid.Height = GameGrid.Width * (rows / (double)cols);
 
             for (int r = 0; r < rows; r++)
             {
@@ -171,7 +175,7 @@ namespace Snake
         //{
         //    try
         //    {
-        //        if (File.Exists("highest_score.txt"))
+        //        if (File.Exists(""D:\Bai Tap\C#\Snake_change\Highest_score.txt""))
         //        {
         //            string scoreText = File.ReadAllText("highest_score.txt");
         //            gameState.HighestScore = int.Parse(scoreText);
@@ -295,7 +299,7 @@ namespace Snake
             //}
             //HighestScore.Text = $"Highest score {gameState.HighestScore}";
             Overlay.Visibility = Visibility.Visible;
-            OverlayText.Text = "Oh no!\n...you die\nPress any key to start";
+            OverlayText.Text = "Press any key to start";
             gameState.Mode = GameMode.NotStarted;
         }
     }

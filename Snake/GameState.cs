@@ -36,8 +36,8 @@ namespace Snake
             Grid = new GridValue[Rows, Cols];
             Dir = Direction.right;
             Lives = lives;
+            
             this.gameTimeInSeconds = gameTimeInSeconds;
-
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
@@ -53,7 +53,7 @@ namespace Snake
             gameTimeInSeconds--;
 
             // Kiểm tra nếu thời gian đã hết, kết thúc trò chơi
-            if (gameTimeInSeconds <= 0)
+            if (gameTimeInSeconds == 0)
             {
                 Mode = GameMode.Over;
             }
@@ -170,14 +170,6 @@ namespace Snake
 
         public void Move()
         {
-            if (isImmune)
-            {
-                immuneTimer -= delay;
-                if (immuneTimer <= 0)
-                {
-                    isImmune = false;
-                }
-            }
 
             if (dirChanges.Count > 0)
             {
@@ -188,7 +180,16 @@ namespace Snake
             Position newHeadPos = HeadPosition().Translate(Dir);
             GridValue hit = WillHit(newHeadPos);
 
-            if(hit == GridValue.Outside || hit == GridValue.Snake)
+            if (isImmune)
+            {
+                immuneTimer -= delay;
+                if (immuneTimer <= 0)
+                {
+                    isImmune = false;
+                }
+            }
+
+            if (hit == GridValue.Outside || hit == GridValue.Snake)
             {
                 if (!isImmune)
                 {

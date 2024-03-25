@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Body - Copy.png" />
     <Resource Include="Assets\Body.png" />
     <Resource Include="Assets\DeadBody.png" />
     <Resource Include="Assets\DeadHead.png" />
